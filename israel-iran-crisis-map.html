@@ -357,6 +357,16 @@
     <div class="kq-panel-meta">Last 7 days &nbsp;|&nbsp; KQ202 (NBO&rarr;BOM) &amp; KQ203 (BOM&rarr;NBO) &nbsp;|&nbsp; Data as of 07 Mar 2026</div>
   </div>
 
+  <!-- LIVE FLIGHT ALERT -->
+  <div style="margin:0;padding:10px 20px;background:linear-gradient(90deg,rgba(230,57,70,0.12),rgba(255,100,50,0.08));border-bottom:1px solid rgba(230,57,70,0.3);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div class="live-dot" style="background:#e63946;"></div>
+    <span style="color:#ff6b75;font-weight:700;font-size:0.88rem;letter-spacing:0.5px;">LIVE FLIGHT ALERT</span>
+    <span style="color:#e0eeff;font-size:0.85rem;">
+      <strong>KQ202</strong> (5Y-CYD &middot; B737-8HX) &mdash; departed NBO <strong>00:48 EAT, 07 Mar</strong> &mdash; delayed <strong style="color:#ff6b75;">+8h 03m</strong> &mdash; currently EN ROUTE at <strong>35,000 ft</strong> over Somalia &mdash; ETA Mumbai: <strong style="color:#ffa040;">08:59 IST, 07 Mar</strong>
+    </span>
+    <a href="https://www.flightradar24.com/KQA202/3ea1163c" target="_blank" style="margin-left:auto;font-size:0.72rem;color:#6aaeff;border:1px solid rgba(100,160,230,0.3);padding:3px 10px;border-radius:12px;white-space:nowrap;text-decoration:none;">Track on FR24 &rarr;</a>
+  </div>
+
   <!-- Summary Stats -->
   <div class="kq-stats-row">
     <div class="kq-stat">
@@ -365,7 +375,7 @@
     </div>
     <div class="kq-stat">
       <div class="kq-label">KQ202 Avg Delay</div>
-      <div class="kq-val" style="color:#ffa040;">~83 min</div>
+      <div class="kq-val" style="color:#e63946;">~2h 17m</div>
     </div>
     <div class="kq-stat">
       <div class="kq-label">KQ203 Delays (confirmed)</div>
@@ -376,8 +386,8 @@
       <div class="kq-val" style="color:#e63946;">~3h 11m</div>
     </div>
     <div class="kq-stat">
-      <div class="kq-label">KQ202 Today (07 Mar)</div>
-      <div class="kq-val" style="color:#6aaeff; font-size:0.85rem;">Scheduled 16:45 EAT</div>
+      <div class="kq-label">KQ202 Now (06/07 Mar)</div>
+      <div class="kq-val" style="color:#ff6b75;font-size:0.82rem;">&#9992; EN ROUTE &mdash; ETA 08:59 IST</div>
     </div>
     <div class="kq-stat">
       <div class="kq-label">KQ203 Today (07 Mar)</div>
@@ -453,13 +463,18 @@
           <td><span class="kq-delay-pill kq-delay-mod">+2h 10m</span></td>
           <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
         </tr>
-        <tr>
+        <tr style="background:rgba(230,57,70,0.07);">
           <td class="date-col">06 Mar 2026</td>
           <td>Friday</td>
-          <td>16:45</td><td>~18:35</td>
-          <td>01:30</td><td>~03:20</td>
-          <td><span class="kq-delay-pill kq-delay-mod">~+1h 50m</span></td>
-          <td><span class="kq-status-pill kq-s-arrived">Arrived</span></td>
+          <td>16:45 EAT</td>
+          <td><strong style="color:#ff6b75;">00:48 EAT (07 Mar)</strong><br/><span style="font-size:0.68rem;color:#5a7a9a;">NBO T1A Gate 16</span></td>
+          <td>01:30 IST</td>
+          <td><strong style="color:#ffa040;">08:59 IST (est.)</strong><br/><span style="font-size:0.68rem;color:#5a7a9a;">BOM T2 &mdash; not yet landed</span></td>
+          <td><span class="kq-delay-pill kq-delay-major">+8h 03m</span></td>
+          <td>
+            <span class="kq-status-pill" style="background:rgba(230,57,70,0.18);color:#ff6b75;border:1px solid rgba(230,57,70,0.4);">&#9992; En Route</span>
+            <span class="live-tag">LIVE</span>
+          </td>
         </tr>
         <tr>
           <td class="date-col">07 Mar 2026</td>
@@ -582,12 +597,20 @@
       <div class="kq-val" style="color:#e63946;">~27&ndash;32%</div>
     </div>
     <div class="kq-current-item">
-      <div class="kq-label">KQ202 Current State</div>
-      <div class="kq-val" style="color:#6aaeff;">Scheduled &mdash; departs 16:45 EAT today</div>
+      <div class="kq-label">KQ202 Live Position</div>
+      <div class="kq-val" style="color:#ff6b75;">35,000 ft &mdash; 467 kts &mdash; hdg 67&deg; (NE)<br/><span style="font-size:0.75rem;font-weight:400;color:#7a9cc0;">Over Somalia / Indian Ocean &mdash; ETA 08:59 IST</span></div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">KQ202 Departure Delay</div>
+      <div class="kq-val" style="color:#ff6b75;">+8h 03m &mdash; worst this week</div>
     </div>
     <div class="kq-current-item">
       <div class="kq-label">KQ203 Current State</div>
       <div class="kq-val" style="color:#6aaeff;">Scheduled &mdash; departs 02:10 IST today</div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">FR24 Flight ID</div>
+      <div class="kq-val"><a href="https://www.flightradar24.com/KQA202/3ea1163c" target="_blank" style="color:#6aaeff;text-decoration:none;">KQA202 / 3ea1163c &nearr;</a></div>
     </div>
   </div>
 </div>
