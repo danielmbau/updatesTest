@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Israel–Iran Crisis: Strike Map [LIVE]</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0d0d1a;
+      color: #e0e0e0;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      padding: 18px 30px;
+      border-bottom: 2px solid #2a3a5a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      color: #ffffff;
+      letter-spacing: 1px;
+    }
+    header .subtitle {
+      font-size: 0.8rem;
+      color: #7a9cc0;
+      margin-top: 4px;
+    }
+    .last-updated {
+      font-size: 0.75rem;
+      color: #5a7a9a;
+      text-align: right;
+    }
+    .legend-bar {
+      display: flex;
+      gap: 24px;
+      padding: 10px 30px;
+      background: #111122;
+      border-bottom: 1px solid #2a3a5a;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      flex-shrink: 0;
+    }
+    .dot-red   { background: #e63946; }
+    .dot-green { background: #2dc653; }
+    .stats-bar {
+      display: flex;
+      gap: 0;
+      background: #0f0f20;
+      border-bottom: 1px solid #2a3a5a;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      padding: 12px 24px;
+      border-right: 1px solid #2a3a5a;
+      flex: 1;
+      min-width: 140px;
+    }
+    .stat-box .label { font-size: 0.72rem; color: #7a9cc0; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-box .value { font-size: 1.5rem; font-weight: bold; color: #ffffff; }
+    .stat-box.red .value  { color: #e63946; }
+    .stat-box.green .value { color: #2dc653; }
+    #map {
+      width: 100%;
+      height: 60vh;
+      min-height: 420px;
+    }
+    .section-title {
+      padding: 16px 30px 10px;
+      font-size: 1.05rem;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      background: #111122;
+      border-top: 2px solid #2a3a5a;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      padding: 0 20px 30px;
+      background: #0d0d1a;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 900px;
+    }
+    thead tr {
+      background: #1a1a2e;
+      position: sticky;
+      top: 0;
+    }
+    thead th {
+      padding: 11px 14px;
+      text-align: left;
+      color: #a0b8d0;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.8px;
+      border-bottom: 2px solid #2a3a5a;
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid #1e2a40;
+      transition: background 0.15s;
+    }
+    tbody tr:hover { background: #161628; }
+    tbody td {
+      padding: 9px 14px;
+      vertical-align: top;
+      line-height: 1.4;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .tag-israel { background: rgba(230,57,70,0.2); color: #ff6b75; border: 1px solid rgba(230,57,70,0.4); }
+    .tag-iran   { background: rgba(45,198,83,0.15); color: #3dde6e; border: 1px solid rgba(45,198,83,0.35); }
+    .casualties-num {
+      font-weight: bold;
+    }
+    .casualties-num.high { color: #ff4444; }
+    .casualties-num.med  { color: #ff9900; }
+    .casualties-num.low  { color: #ffcc00; }
+    .casualties-num.zero { color: #7a9cc0; }
+    .location-col { color: #c0d8f0; font-weight: 500; }
+    .date-col { color: #a0b8c8; white-space: nowrap; }
+    .desc-col { color: #9a9ab0; font-size: 0.78rem; }
+    footer {
+      background: #0a0a18;
+      padding: 16px 30px;
+      font-size: 0.72rem;
+      color: #445566;
+      border-top: 1px solid #1e2a40;
+      text-align: center;
+    }
+    footer a { color: #4477aa; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* Live update bar */
+    #live-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 30px;
+      background: #0a0a18;
+      border-bottom: 1px solid #1e2a40;
+      font-size: 0.78rem;
+      flex-wrap: wrap;
+    }
+    .live-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #2dc653;
+      animation: pulse 1.8s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+    #live-status { color: #3dde6e; font-weight: 600; }
+    #live-meta   { color: #5a7a9a; }
+    #live-count  { color: #a0b8d0; }
+    #next-refresh { color: #5a7a9a; margin-left: auto; }
+    .new-row-flash { animation: rowflash 2s ease-out; }
+    @keyframes rowflash {
+      0%   { background: rgba(45,198,83,0.25); }
+      100% { background: transparent; }
+    }
+    .live-tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      background: rgba(45,198,83,0.2);
+      color: #3dde6e;
+      border: 1px solid rgba(45,198,83,0.35);
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    /* Leaflet custom marker styles */
+    .custom-marker-red, .custom-marker-green {
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .custom-marker-red   { background: radial-gradient(circle at 35% 35%, #ff6b75, #b02030); box-shadow: 0 0 8px rgba(230,57,70,0.7); }
+    .custom-marker-green { background: radial-gradient(circle at 35% 35%, #4de876, #1a8a3a); box-shadow: 0 0 8px rgba(45,198,83,0.7); }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.1rem; }
+      .stat-box { padding: 10px 14px; }
+    }
+
+    /* ── Kenya Airways Flight Status Panel ── */
+    .kq-panel {
+      background: #0b0f1e;
+      border-bottom: 2px solid #1e3a5f;
+      padding: 0 0 20px;
+    }
+    .kq-panel-header {
+      background: linear-gradient(135deg, #0d1f3c, #102a50);
+      padding: 14px 30px;
+      border-bottom: 1px solid #1e3a5f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .kq-panel-header h2 {
+      font-size: 1rem;
+      color: #e0eeff;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .kq-badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .kq-badge-airline {
+      background: rgba(30,90,180,0.25);
+      color: #6aaeff;
+      border: 1px solid rgba(30,90,180,0.45);
+    }
+    .kq-panel-meta { font-size: 0.72rem; color: #4a6a8a; }
+    .kq-stats-row {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #1e3a5f;
+      flex-wrap: wrap;
+    }
+    .kq-stat {
+      padding: 10px 24px;
+      border-right: 1px solid #1e3a5f;
+      flex: 1;
+      min-width: 130px;
+    }
+    .kq-stat .kq-label { font-size: 0.68rem; color: #5a7a9a; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kq-stat .kq-val   { font-size: 1.15rem; font-weight: bold; color: #e0eeff; margin-top: 2px; }
+    .kq-sub-header {
+      padding: 12px 30px 6px;
+      font-size: 0.82rem;
+      color: #7a9cc0;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .kq-route-arrow { color: #4a8ac0; font-size: 1rem; }
+    .kq-table-wrap { overflow-x: auto; padding: 0 20px; }
+    .kq-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      min-width: 700px;
+      margin-bottom: 8px;
+    }
+    .kq-table thead tr { background: #10192e; }
+    .kq-table thead th {
+      padding: 9px 12px;
+      text-align: left;
+      color: #7a9cc0;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      border-bottom: 1px solid #1e3a5f;
+      white-space: nowrap;
+    }
+    .kq-table tbody tr { border-bottom: 1px solid #141e30; transition: background 0.1s; }
+    .kq-table tbody tr:hover { background: #0e1828; }
+    .kq-table tbody td { padding: 8px 12px; vertical-align: middle; }
+    .kq-delay-pill {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .kq-delay-minor  { background: rgba(255,200,50,0.15); color: #ffc832; border: 1px solid rgba(255,200,50,0.3); }
+    .kq-delay-mod    { background: rgba(255,140,0,0.15);  color: #ffa040; border: 1px solid rgba(255,140,0,0.3); }
+    .kq-delay-major  { background: rgba(230,57,70,0.2);   color: #ff6b75; border: 1px solid rgba(230,57,70,0.35); }
+    .kq-status-pill {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .kq-s-completed { background: rgba(45,198,83,0.12); color: #3dde6e; border: 1px solid rgba(45,198,83,0.25); }
+    .kq-s-arrived   { background: rgba(45,198,83,0.12); color: #3dde6e; border: 1px solid rgba(45,198,83,0.25); }
+    .kq-s-scheduled { background: rgba(100,160,230,0.12); color: #6aaeff; border: 1px solid rgba(100,160,230,0.25); }
+    .kq-s-nodata    { background: rgba(90,90,110,0.15); color: #6a7a8a; border: 1px solid rgba(90,90,110,0.25); }
+    .kq-current-box {
+      margin: 14px 20px 0;
+      padding: 12px 18px;
+      background: #0d1a2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 0.82rem;
+    }
+    .kq-current-item .kq-label { font-size: 0.68rem; color: #5a7a9a; text-transform: uppercase; letter-spacing: 0.7px; }
+    .kq-current-item .kq-val   { color: #e0eeff; margin-top: 3px; font-weight: 600; }
+    .kq-divider { width: 100%; height: 1px; background: #1e3a5f; margin: 8px 20px; width: calc(100% - 40px); }
+  </style>
+</head>
+<body>
+
+<!-- ── KENYA AIRWAYS NBO ⇄ BOM FLIGHT STATUS ── -->
+<div class="kq-panel">
+  <div class="kq-panel-header">
+    <h2>
+      <span class="kq-badge kq-badge-airline">KQ</span>
+      Kenya Airways &mdash; Nairobi (NBO) &#x21C6; Mumbai (BOM) Flight Status
+    </h2>
+    <div class="kq-panel-meta">Last 7 days &nbsp;|&nbsp; KQ202 (NBO&rarr;BOM) &amp; KQ203 (BOM&rarr;NBO) &nbsp;|&nbsp; Data as of 07 Mar 2026</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="kq-stats-row">
+    <div class="kq-stat">
+      <div class="kq-label">KQ202 Delays (7 days)</div>
+      <div class="kq-val" style="color:#ffa040;">7 of 7 flights</div>
+    </div>
+    <div class="kq-stat">
+      <div class="kq-label">KQ202 Avg Delay</div>
+      <div class="kq-val" style="color:#ffa040;">~83 min</div>
+    </div>
+    <div class="kq-stat">
+      <div class="kq-label">KQ203 Delays (confirmed)</div>
+      <div class="kq-val" style="color:#e63946;">3 of 3 with data</div>
+    </div>
+    <div class="kq-stat">
+      <div class="kq-label">KQ203 Avg Delay</div>
+      <div class="kq-val" style="color:#e63946;">~3h 11m</div>
+    </div>
+    <div class="kq-stat">
+      <div class="kq-label">KQ202 Today (07 Mar)</div>
+      <div class="kq-val" style="color:#6aaeff; font-size:0.85rem;">Scheduled 16:45 EAT</div>
+    </div>
+    <div class="kq-stat">
+      <div class="kq-label">KQ203 Today (07 Mar)</div>
+      <div class="kq-val" style="color:#6aaeff; font-size:0.85rem;">Scheduled 02:10 IST</div>
+    </div>
+  </div>
+
+  <!-- KQ202: Nairobi → Mumbai -->
+  <div class="kq-sub-header">
+    KQ202 &nbsp;<span class="kq-route-arrow">&#x2708;</span>&nbsp; Nairobi (NBO) &rarr; Mumbai (BOM)
+    &nbsp;&nbsp;<span style="font-weight:400;color:#4a6a8a;text-transform:none;font-size:0.75rem;">Sched: 16:45 EAT &rarr; 01:00 IST (+1 day)</span>
+  </div>
+  <div class="kq-table-wrap">
+    <table class="kq-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Day</th>
+          <th>Sched Dep (EAT)</th>
+          <th>Actual Dep (EAT)</th>
+          <th>Sched Arr (IST)</th>
+          <th>Actual Arr (IST)</th>
+          <th>Delay</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="date-col">28 Feb 2026</td>
+          <td>Saturday</td>
+          <td>16:45</td><td>17:21</td>
+          <td>01:00</td><td>00:53</td>
+          <td><span class="kq-delay-pill kq-delay-minor">+36 min</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">01 Mar 2026</td>
+          <td>Sunday</td>
+          <td>16:45</td><td>17:45</td>
+          <td>01:00</td><td>01:25</td>
+          <td><span class="kq-delay-pill kq-delay-minor">+60 min</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">02 Mar 2026</td>
+          <td>Monday</td>
+          <td>16:55</td><td>17:19</td>
+          <td>01:10</td><td>00:56</td>
+          <td><span class="kq-delay-pill kq-delay-minor">+24 min</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">03 Mar 2026</td>
+          <td>Tuesday</td>
+          <td>16:45</td><td>20:18</td>
+          <td>01:00</td><td>22:38 (same day)</td>
+          <td><span class="kq-delay-pill kq-delay-major">+3h 33m</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">04 Mar 2026</td>
+          <td>Wednesday</td>
+          <td>16:45</td><td>16:56</td>
+          <td>01:00</td><td>01:54</td>
+          <td><span class="kq-delay-pill kq-delay-minor">+11 min</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">05 Mar 2026</td>
+          <td>Thursday</td>
+          <td>16:45</td><td>18:55</td>
+          <td>01:00</td><td>03:20</td>
+          <td><span class="kq-delay-pill kq-delay-mod">+2h 10m</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">06 Mar 2026</td>
+          <td>Friday</td>
+          <td>16:45</td><td>~18:35</td>
+          <td>01:30</td><td>~03:20</td>
+          <td><span class="kq-delay-pill kq-delay-mod">~+1h 50m</span></td>
+          <td><span class="kq-status-pill kq-s-arrived">Arrived</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">07 Mar 2026</td>
+          <td>Saturday</td>
+          <td>16:45</td><td>&mdash;</td>
+          <td>01:30</td><td>&mdash;</td>
+          <td>&mdash;</td>
+          <td><span class="kq-status-pill kq-s-scheduled">Scheduled</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="kq-divider"></div>
+
+  <!-- KQ203: Mumbai → Nairobi -->
+  <div class="kq-sub-header">
+    KQ203 &nbsp;<span class="kq-route-arrow">&#x2708;</span>&nbsp; Mumbai (BOM) &rarr; Nairobi (NBO)
+    &nbsp;&nbsp;<span style="font-weight:400;color:#4a6a8a;text-transform:none;font-size:0.75rem;">Sched: 02:10 IST &rarr; 06:25 EAT</span>
+  </div>
+  <div class="kq-table-wrap">
+    <table class="kq-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Day</th>
+          <th>Sched Dep (IST)</th>
+          <th>Actual Dep (IST)</th>
+          <th>Sched Arr (EAT)</th>
+          <th>Actual Arr (EAT)</th>
+          <th>Delay</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="date-col">28 Feb 2026</td>
+          <td>Saturday</td>
+          <td>02:10</td><td>05:03</td>
+          <td>06:25</td><td>~03:10 (early arr)</td>
+          <td><span class="kq-delay-pill kq-delay-major">+2h 53m dep</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">01 Mar 2026</td>
+          <td>Sunday</td>
+          <td>02:10</td><td>&mdash;</td>
+          <td>06:25</td><td>&mdash;</td>
+          <td>&mdash;</td>
+          <td><span class="kq-status-pill kq-s-nodata">No Data</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">02 Mar 2026</td>
+          <td>Monday</td>
+          <td>02:10</td><td>03:58</td>
+          <td>06:25</td><td>07:24</td>
+          <td><span class="kq-delay-pill kq-delay-mod">+1h 48m</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">03 Mar 2026</td>
+          <td>Tuesday</td>
+          <td>02:20</td><td>08:14</td>
+          <td>06:35</td><td>06:36</td>
+          <td><span class="kq-delay-pill kq-delay-major">+5h 54m dep</span></td>
+          <td><span class="kq-status-pill kq-s-completed">Completed</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">04 Mar 2026</td>
+          <td>Wednesday</td>
+          <td>02:10</td><td>&mdash;</td>
+          <td>06:25</td><td>&mdash;</td>
+          <td>&mdash;</td>
+          <td><span class="kq-status-pill kq-s-nodata">No Data</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">05 Mar 2026</td>
+          <td>Thursday</td>
+          <td>02:10</td><td>&mdash;</td>
+          <td>06:25</td><td>&mdash;</td>
+          <td>&mdash;</td>
+          <td><span class="kq-status-pill kq-s-nodata">No Data</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">06 Mar 2026</td>
+          <td>Friday</td>
+          <td>02:10</td><td>&mdash;</td>
+          <td>06:25</td><td>&mdash;</td>
+          <td>&mdash;</td>
+          <td><span class="kq-status-pill kq-s-nodata">No Data</span></td>
+        </tr>
+        <tr>
+          <td class="date-col">07 Mar 2026</td>
+          <td>Saturday</td>
+          <td>02:10</td><td>&mdash;</td>
+          <td>06:25</td><td>&mdash;</td>
+          <td>&mdash;</td>
+          <td><span class="kq-status-pill kq-s-scheduled">Scheduled</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Current State / Info Box -->
+  <div class="kq-current-box">
+    <div class="kq-current-item">
+      <div class="kq-label">Aircraft</div>
+      <div class="kq-val">Boeing 737-800 &nbsp;|&nbsp; Reg: 5Y-CYD</div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">Route Distance</div>
+      <div class="kq-val">4,538 km</div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">KQ202 30-day On-Time Rate</div>
+      <div class="kq-val" style="color:#ffa040;">~27&ndash;42%</div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">KQ203 30-day On-Time Rate</div>
+      <div class="kq-val" style="color:#e63946;">~27&ndash;32%</div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">KQ202 Current State</div>
+      <div class="kq-val" style="color:#6aaeff;">Scheduled &mdash; departs 16:45 EAT today</div>
+    </div>
+    <div class="kq-current-item">
+      <div class="kq-label">KQ203 Current State</div>
+      <div class="kq-val" style="color:#6aaeff;">Scheduled &mdash; departs 02:10 IST today</div>
+    </div>
+  </div>
+</div>
+<!-- ── END KENYA AIRWAYS SECTION ── -->
+
+<header>
+  <div>
+    <h1>Israel – Iran Crisis: Strike Map</h1>
+    <div class="subtitle">Documented strikes, attacks &amp; casualties — June 2025 to March 2026 · All times in UTC</div>
+  </div>
+  <div class="last-updated" id="last-updated-hdr">Last updated:<br/>5 March 2026</div>
+</header>
+
+<div id="live-bar">
+  <div class="live-dot"></div>
+  <span id="live-status">LIVE</span>
+  <span id="live-meta">Fetching RSS feeds every 10 minutes…</span>
+  <span id="live-count"></span>
+  <span id="next-refresh"></span>
+</div>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-dot dot-red"></div> Israeli / US-Israeli strikes</div>
+  <div class="legend-item"><div class="legend-dot dot-green"></div> Iranian strikes / retaliation</div>
+  <div class="legend-item" style="margin-left:auto; color:#5a7a9a; font-size:0.75rem;">Click a marker for full details</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-box">
+    <div class="label">Conflict Period</div>
+    <div class="value" style="font-size:1rem; margin-top:4px;">Jun 2025 – Mar 2026</div>
+  </div>
+  <div class="stat-box red">
+    <div class="label">Iranian casualties (est.)</div>
+    <div class="value">1,840+</div>
+  </div>
+  <div class="stat-box green">
+    <div class="label">Israeli + Gulf casualties (est.)</div>
+    <div class="value">90+</div>
+  </div>
+  <div class="stat-box">
+    <div class="label">Total documented strikes</div>
+    <div class="value">28</div>
+  </div>
+  <div class="stat-box">
+    <div class="label">Countries affected</div>
+    <div class="value">11</div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div class="section-title">Strike Timeline Table — most recent first · All times UTC</div>
+<div class="table-wrapper">
+<table id="strikeTable">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Date &amp; Time (local)</th>
+      <th>Perpetrator</th>
+      <th>Target Location</th>
+      <th>Country</th>
+      <th>Target Type</th>
+      <th>Vehicle / Weapon</th>
+      <th>Killed</th>
+      <th>Wounded</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<!-- ── DXB FLIGHTS SECTION ──────────────────────────────────────────────── -->
+<div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-right:30px;">
+  <span>Dubai International Airport (DXB) — Flights since 28 Feb 2026 · All times UTC</span>
+  <div style="display:flex;align-items:center;gap:14px;font-size:0.78rem;">
+    <div class="live-dot"></div>
+    <span id="flight-live-status" style="color:#3dde6e;font-weight:600">LIVE</span>
+    <span id="flight-last-refresh" style="color:#5a7a9a"></span>
+  </div>
+</div>
+
+<div id="flight-stats-bar" style="display:flex;gap:0;background:#0f0f20;border-bottom:1px solid #2a3a5a;flex-wrap:wrap;">
+  <div class="stat-box"><div class="label">Today Departures</div><div class="value" id="fstat-dep">—</div></div>
+  <div class="stat-box"><div class="label">Today Arrivals</div><div class="value" id="fstat-arr">—</div></div>
+  <div class="stat-box red"><div class="label">Cancelled Today</div><div class="value" id="fstat-cancelled">—</div></div>
+  <div class="stat-box"><div class="label">Airport Status</div><div class="value" id="fstat-status" style="font-size:0.95rem;margin-top:4px">Checking…</div></div>
+</div>
+
+<div style="display:flex;gap:10px;padding:10px 30px;background:#0d0d1a;flex-wrap:wrap;align-items:center;font-size:0.78rem;border-bottom:1px solid #1e2a40;">
+  <span style="color:#7a9cc0">Filter:</span>
+  <button onclick="filterFlights('ALL')"    class="f-btn f-btn-active" id="fbtn-all">All</button>
+  <button onclick="filterFlights('DEP')"    class="f-btn" id="fbtn-dep">Departures</button>
+  <button onclick="filterFlights('ARR')"    class="f-btn" id="fbtn-arr">Arrivals</button>
+  <button onclick="filterFlights('CANCEL')" class="f-btn" id="fbtn-cancel">Cancelled</button>
+  <span style="color:#445566;margin-left:auto;">Source: <a href="https://www.avionio.com/en/airport/dxb" target="_blank" style="color:#4477aa">avionio.com</a> (live) + news reports (historical)</span>
+</div>
+
+<div class="table-wrapper" id="flight-table-wrapper">
+<table id="flightTable">
+  <thead>
+    <tr>
+      <th>Date (UTC)</th>
+      <th>Time (UTC)</th>
+      <th>Dir</th>
+      <th>Flight</th>
+      <th>Airline</th>
+      <th>Dest / Origin</th>
+      <th>IATA</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody id="flightBody"></tbody>
+</table>
+</div>
+
+<style>
+  .f-btn {
+    padding: 3px 12px;
+    border-radius: 14px;
+    border: 1px solid #2a3a5a;
+    background: transparent;
+    color: #7a9cc0;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+  }
+  .f-btn:hover { background: #1a2a40; color: #c0d8f0; }
+  .f-btn-active { background: #1a2a40; color: #ffffff; border-color: #4a6a8a; }
+  .dir-dep { color: #ffcc44; font-weight: bold; }
+  .dir-arr { color: #44ccff; font-weight: bold; }
+  .dir-both { color: #cc88ff; font-weight: bold; }
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .hist-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    background: rgba(100,100,180,0.2);
+    color: #8888cc;
+    border: 1px solid rgba(100,100,180,0.3);
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+</style>
+
+<footer>
+  Sources:
+  <a href="https://en.wikipedia.org/wiki/Twelve-Day_War" target="_blank">Wikipedia – Twelve-Day War</a> ·
+  <a href="https://en.wikipedia.org/wiki/2026_Israeli%E2%80%93United_States_strikes_on_Iran" target="_blank">Wikipedia – 2026 US-Israel Strikes on Iran</a> ·
+  <a href="https://www.aljazeera.com/news/2026/2/28/mapping-us-and-israeli-attacks-on-iran-and-tehrans-retaliatory-strikes" target="_blank">Al Jazeera – Strike Mapping</a> ·
+  <a href="https://www.aljazeera.com/news/2026/3/1/us-israel-attacks-on-iran-death-toll-and-injuries-live-tracker" target="_blank">Al Jazeera – Death Toll Tracker</a> ·
+  <a href="https://english.news.cn/20260302/fece74cf56de4f92896876eec5799887/c.html" target="_blank">Xinhua Timeline</a> ·
+  <a href="https://www.longwarjournal.org/archives/2026/03/iran-expands-retaliation-for-us-israel-campaign-across-arab-states-february-28-march-2.php" target="_blank">FDD Long War Journal</a> ·
+  <a href="https://en.wikipedia.org/wiki/2026_Minab_school_airstrike" target="_blank">Wikipedia – Minab School Strike</a>
+  <br/>Data reflects best available reporting as of 5 March 2026. Casualty figures are estimates and subject to revision.
+</footer>
+
+<script>
+// ── Strike Data ─────────────────────────────────────────────────────────────
+const strikes = [
+  // ── JUNE 2025 – TWELVE-DAY WAR ──────────────────────────────────────────
+  {
+    id: 1,
+    date: "2025-06-13",
+    time: "02:00",
+    displayDate: "13 Jun 2025, ~02:00 IDT",
+    actor: "Israel",
+    location: "Natanz Nuclear Facility",
+    country: "Iran",
+    lat: 33.7228, lng: 51.7260,
+    type: "Nuclear / Military",
+    vehicle: "F-35I Adir · F-15I Ra'am · GBU-28 bunker busters",
+    killed: 0,
+    wounded: 0,
+    note: "First wave of Operation Rising Lion. IDF struck key nuclear enrichment site. Part of 100+ target opening salvo using 200+ fighter jets, 330+ munitions."
+  },
+  {
+    id: 2,
+    date: "2025-06-13",
+    time: "02:00",
+    displayDate: "13 Jun 2025, ~02:00 IDT",
+    actor: "Israel",
+    location: "Fordow Nuclear Site",
+    country: "Iran",
+    lat: 34.8851, lng: 49.2195,
+    type: "Nuclear",
+    vehicle: "F-35I Adir · GBU-28 bunker busters",
+    killed: 0,
+    wounded: 0,
+    note: "Underground enrichment facility struck in opening wave. 200+ IDF fighter jets deployed in 5 waves."
+  },
+  {
+    id: 3,
+    date: "2025-06-13",
+    time: "02:00",
+    displayDate: "13 Jun 2025, ~02:00 IDT",
+    actor: "Israel",
+    location: "Arak Heavy Water Reactor",
+    country: "Iran",
+    lat: 34.0892, lng: 49.8497,
+    type: "Nuclear",
+    vehicle: "F-15I Ra'am · Precision-guided munitions",
+    killed: 0,
+    wounded: 0,
+    note: "Part of 5-wave air strike. 30 Iranian generals and 9 nuclear scientists killed across opening strikes."
+  },
+  {
+    id: 4,
+    date: "2025-06-13",
+    time: "02:00",
+    displayDate: "13 Jun 2025, ~02:00 IDT",
+    actor: "Israel",
+    location: "Tehran (Military HQ)",
+    country: "Iran",
+    lat: 35.6892, lng: 51.3890,
+    type: "Military / Leadership",
+    vehicle: "F-35I Adir · Delilah cruise missiles · Mossad ground ops",
+    killed: 30,
+    wounded: 150,
+    note: "30 generals killed in minutes. 9 nuclear scientists also eliminated. 5 waves of air strikes by 06:30 IDT."
+  },
+  {
+    id: 5,
+    date: "2025-06-13",
+    time: "02:00",
+    displayDate: "13 Jun 2025, ~02:00 IDT",
+    actor: "Israel",
+    location: "Isfahan (Air Defenses)",
+    country: "Iran",
+    lat: 32.6546, lng: 51.6680,
+    type: "Air Defense / Military",
+    vehicle: "F-35I Adir · Standoff precision munitions",
+    killed: 0,
+    wounded: 0,
+    note: "Strike on Iranian defense systems in Isfahan. Israel posted video of destruction."
+  },
+  {
+    id: 6,
+    date: "2025-06-13",
+    time: "06:00",
+    displayDate: "13 Jun 2025, ~06:00 IDT",
+    actor: "Iran",
+    location: "Tel Aviv",
+    country: "Israel",
+    lat: 32.0853, lng: 34.7818,
+    type: "Civilian / Urban",
+    vehicle: "Emad ballistic missiles · Shahed-136 suicide drones",
+    killed: 5,
+    wounded: 250,
+    note: "Iran launched 550+ ballistic missiles and 1,000+ suicide drones over 12 days. Tel Aviv hit multiple times. Apartment buildings damaged."
+  },
+  {
+    id: 7,
+    date: "2025-06-13",
+    time: "06:00",
+    displayDate: "13 Jun 2025, ~06:00 IDT",
+    actor: "Iran",
+    location: "Haifa",
+    country: "Israel",
+    lat: 32.8191, lng: 34.9983,
+    type: "Civilian / Urban",
+    vehicle: "Ghadr-110 ballistic missiles · Shahed-136 drones",
+    killed: 3,
+    wounded: 120,
+    note: "Missiles struck apartment buildings in Haifa. Part of wave-1 retaliation by Iran."
+  },
+  {
+    id: 8,
+    date: "2025-06-15",
+    time: "08:30",
+    displayDate: "15 Jun 2025, 08:30 IDT",
+    actor: "Iran",
+    location: "Bat Yam / Rehovot",
+    country: "Israel",
+    lat: 32.0169, lng: 34.7506,
+    type: "Civilian / Urban",
+    vehicle: "Fattah-1 hypersonic missiles · Shahed-136 drones (joint with Houthis)",
+    killed: 9,
+    wounded: 200,
+    note: "Iran and Houthis (Yemen) launched simultaneous ballistic missiles. 61 buildings damaged in Bat Yam. Mall in Kiryat Ekron also struck."
+  },
+  {
+    id: 9,
+    date: "2025-06-15",
+    time: "08:30",
+    displayDate: "15 Jun 2025, 08:30 IDT",
+    actor: "Iran",
+    location: "Kiryat Ekron",
+    country: "Israel",
+    lat: 31.8667, lng: 34.8167,
+    type: "Civilian – Mall",
+    vehicle: "Ballistic missiles · Houthi Zulfiqar missiles",
+    killed: 4,
+    wounded: 80,
+    note: "Shopping mall struck in coordinated Iran–Houthi missile barrage."
+  },
+  {
+    id: 10,
+    date: "2025-06-22",
+    time: "03:00",
+    displayDate: "22 Jun 2025, ~03:00 IDT",
+    actor: "Israel",
+    location: "Bushehr Nuclear Plant area",
+    country: "Iran",
+    lat: 28.8311, lng: 50.8878,
+    type: "Nuclear / Infrastructure",
+    vehicle: "US B-2 Spirit stealth bombers · GBU-57 MOP (30,000 lb bunker buster)",
+    killed: 0,
+    wounded: 0,
+    note: "US B-2 bombers joined Israeli operations, bombing three Iranian nuclear sites on June 22 in round-trip mission from CONUS."
+  },
+
+  // ── FEB–MAR 2026 – OPERATION ROARING LION / EPIC FURY ───────────────────
+  {
+    id: 11,
+    date: "2026-02-28",
+    time: "09:45",
+    displayDate: "28 Feb 2026, 09:45 IRST",
+    actor: "Israel",
+    location: "Tehran – Khamenei Compound",
+    country: "Iran",
+    lat: 35.7300, lng: 51.4200,
+    type: "Leadership Assassination",
+    vehicle: "F-35I Adir · Delilah cruise missiles · CIA-assisted targeting",
+    killed: 7,
+    wounded: 20,
+    note: "Supreme Leader Ali Khamenei assassinated. His daughter, son-in-law, grandchild, and daughter-in-law also killed. Wife died Mar 2."
+  },
+  {
+    id: 12,
+    date: "2026-02-28",
+    time: "09:45",
+    displayDate: "28 Feb 2026, ~09:45 IRST",
+    actor: "Israel",
+    location: "Tehran – IRGC HQ / Officials",
+    country: "Iran",
+    lat: 35.6800, lng: 51.4000,
+    type: "Military / Leadership",
+    vehicle: "F-35I Adir · F-22 Raptor · Tomahawk cruise missiles",
+    killed: 40,
+    wounded: 200,
+    note: "~40 Iranian officials killed incl. Defense Minister Nasirzadeh and IRGC commander Pakpour. Ali Shamkhani also killed."
+  },
+  {
+    id: 13,
+    date: "2026-02-28",
+    time: "09:45",
+    displayDate: "28 Feb 2026, ~09:45 IRST",
+    actor: "Israel",
+    location: "Tehran – Niloofar Square",
+    country: "Iran",
+    lat: 35.7500, lng: 51.3600,
+    type: "Civilian",
+    vehicle: "F-35I Adir · GBU-31 JDAM (2,000 lb guided bomb)",
+    killed: 22,
+    wounded: 80,
+    note: "Double-tap strike on civilian area killed 20+ civilians. Operation Roaring Lion opening day."
+  },
+  {
+    id: 14,
+    date: "2026-02-28",
+    time: "09:45",
+    displayDate: "28 Feb 2026, ~09:45 IRST",
+    actor: "Israel",
+    location: "Qom (Missile Launchers)",
+    country: "Iran",
+    lat: 34.6416, lng: 50.8746,
+    type: "Military – Ballistic Missiles",
+    vehicle: "F-35I Adir · Standoff munitions · MQ-9 Reaper drones",
+    killed: 0,
+    wounded: 10,
+    note: "Israel released video of strikes destroying Iranian ballistic missile launchers 80 miles south of Tehran. 300+ launchers destroyed total."
+  },
+  {
+    id: 15,
+    date: "2026-02-28",
+    time: "09:45",
+    displayDate: "28 Feb 2026, ~09:45 IRST",
+    actor: "Israel",
+    location: "Minab – Girls' School",
+    country: "Iran",
+    lat: 27.1499, lng: 57.0816,
+    type: "School / Civilian",
+    vehicle: "Airstrike – aircraft type disputed (Israel/US denies)",
+    killed: 180,
+    wounded: 60,
+    note: "Shajareh Tayyebeh girls' elementary school destroyed during school hours. 165–180 killed, majority schoolchildren. Deadliest single strike. Mass funeral Mar 3."
+  },
+  {
+    id: 16,
+    date: "2026-02-28",
+    time: "11:00",
+    displayDate: "28 Feb 2026, ~11:00 IRST",
+    actor: "Israel",
+    location: "Lamerd – Sports Hall",
+    country: "Iran",
+    lat: 27.3422, lng: 53.1888,
+    type: "Civilian – Sports Facility",
+    vehicle: "Precision-guided munition (aircraft type unconfirmed)",
+    killed: 18,
+    wounded: 40,
+    note: "Sports hall bombed during a girls' practice session. 18+ civilians killed."
+  },
+  {
+    id: 17,
+    date: "2026-02-28",
+    time: "10:00",
+    displayDate: "28 Feb 2026, ~10:00 IRST",
+    actor: "Israel",
+    location: "Isfahan – Air Defenses",
+    country: "Iran",
+    lat: 32.6546, lng: 51.6680,
+    type: "Air Defense",
+    vehicle: "F-35I Adir · B-2 Spirit (US) · GBU-31 JDAM",
+    killed: 5,
+    wounded: 20,
+    note: "Strike on Iranian defense system in Isfahan. IRGC commander Rahbar and 4 others killed (confirmed Mar 3)."
+  },
+  {
+    id: 18,
+    date: "2026-02-28",
+    time: "10:00",
+    displayDate: "28 Feb 2026, ~10:00 IRST",
+    actor: "Israel",
+    location: "Kermanshah (Infrastructure)",
+    country: "Iran",
+    lat: 34.3277, lng: 47.0785,
+    type: "Military / Infrastructure",
+    vehicle: "F-15IE Strike Eagle · Tomahawk cruise missiles",
+    killed: 0,
+    wounded: 15,
+    note: "Part of opening-day joint US-Israel strikes across five cities simultaneously."
+  },
+  {
+    id: 19,
+    date: "2026-02-28",
+    time: "12:00",
+    displayDate: "28 Feb 2026, ~12:00 IRST",
+    actor: "Iran",
+    location: "United Arab Emirates (Dubai/Abu Dhabi)",
+    country: "UAE",
+    lat: 25.2048, lng: 55.2708,
+    type: "Retaliation – Civilian / Infrastructure",
+    vehicle: "137× ballistic missiles (Qiam-1, Emad) · 209× Shahed-136 suicide drones · 2× cruise missiles",
+    killed: 3,
+    wounded: 78,
+    note: "3 killed (Pakistani, Nepali, Bangladeshi workers). 78 wounded. Dubai airport area targeted. UAE defence ministry confirmed figures."
+  },
+  {
+    id: 20,
+    date: "2026-02-28",
+    time: "12:00",
+    displayDate: "28 Feb 2026, ~12:00 IRST",
+    actor: "Iran",
+    location: "Doha, Qatar",
+    country: "Qatar",
+    lat: 25.2854, lng: 51.5310,
+    type: "Retaliation – Military Base",
+    vehicle: "44× ballistic missiles · 8× Shahed-136 drones",
+    killed: 0,
+    wounded: 16,
+    note: "Al Udeid Air Base (largest US base in Middle East) targeted. Qatar intercepted 18 missiles/drones. 16 injured."
+  },
+  {
+    id: 21,
+    date: "2026-02-28",
+    time: "12:00",
+    displayDate: "28 Feb 2026, ~12:00 IRST",
+    actor: "Iran",
+    location: "Manama, Bahrain",
+    country: "Bahrain",
+    lat: 26.2285, lng: 50.5860,
+    type: "Retaliation – Urban",
+    vehicle: "45× ballistic missiles · 9× Shahed-136 drones",
+    killed: 0,
+    wounded: 5,
+    note: "Residential tower hit by drone. US 5th Fleet base area targeted."
+  },
+  {
+    id: 22,
+    date: "2026-02-28",
+    time: "13:00",
+    displayDate: "28 Feb 2026, ~13:00 IRST",
+    actor: "Iran",
+    location: "Amman, Jordan",
+    country: "Jordan",
+    lat: 31.9454, lng: 35.9284,
+    type: "Retaliation – Military",
+    vehicle: "Ballistic missiles (2 intercepted by RJAF)",
+    killed: 0,
+    wounded: 0,
+    note: "2 Iranian ballistic missiles shot down by Jordan. 54 debris incidents caused material damage. No casualties."
+  },
+  {
+    id: 23,
+    date: "2026-02-28",
+    time: "13:00",
+    displayDate: "28 Feb 2026, ~13:00 IRST",
+    actor: "Iran",
+    location: "Kuwait City",
+    country: "Kuwait",
+    lat: 29.3759, lng: 47.9774,
+    type: "Retaliation – Airport / Military",
+    vehicle: "Ballistic missiles · Shahed-136 drones",
+    killed: 1,
+    wounded: 12,
+    note: "Strikes on Kuwait International Airport. 1 killed. US Camp Arifjan also targeted."
+  },
+  {
+    id: 24,
+    date: "2026-03-01",
+    time: "02:00",
+    displayDate: "01 Mar 2026, ~02:00 IRST",
+    actor: "Israel",
+    location: "Natanz Nuclear Facility",
+    country: "Iran",
+    lat: 33.7228, lng: 51.7260,
+    type: "Nuclear",
+    vehicle: "B-2 Spirit (US) · GBU-57 MOP bunker buster · F-35I Adir",
+    killed: 0,
+    wounded: 0,
+    note: "Satellite images (Vantor) confirmed significant structural damage Mar 1–2. Part of 600+ regime targets struck."
+  },
+  {
+    id: 25,
+    date: "2026-03-02",
+    time: "01:00",
+    displayDate: "02 Mar 2026, ~01:00 IRST",
+    actor: "Israel",
+    location: "Tehran – IRGC Malek-Ashtar",
+    country: "Iran",
+    lat: 35.7150, lng: 51.4500,
+    type: "Military – IRGC",
+    vehicle: "F-35I Adir · JDAM precision-guided bombs",
+    killed: 0,
+    wounded: 0,
+    note: "IRGC Malek-Ashtar building completely destroyed. Video released by Iran International confirmed full destruction."
+  },
+  {
+    id: 26,
+    date: "2026-03-02",
+    time: "06:00",
+    displayDate: "02 Mar 2026, ~06:00 IRST",
+    actor: "Israel",
+    location: "Khorramabad",
+    country: "Iran",
+    lat: 33.4876, lng: 48.3558,
+    type: "Military",
+    vehicle: "US B-1B Lancer bomber · Precision-guided munitions",
+    killed: 5,
+    wounded: 8,
+    note: "US strike killed 5 members of Iran's 184th Army Brigade. B-1Bs used to degrade ballistic missile capabilities."
+  },
+  {
+    id: 27,
+    date: "2026-03-03",
+    time: "01:30",
+    displayDate: "03 Mar 2026, 01:30 IRST",
+    actor: "Iran",
+    location: "Riyadh – US Embassy",
+    country: "Saudi Arabia",
+    lat: 24.6877, lng: 46.7219,
+    type: "Retaliation – Embassy",
+    vehicle: "Shahed-136 suicide drone",
+    killed: 0,
+    wounded: 8,
+    note: "Iran struck US Embassy compound in Saudi Arabia as war escalated into Day 4."
+  },
+  {
+    id: 28,
+    date: "2026-03-03",
+    time: "02:00",
+    displayDate: "03 Mar 2026, ~02:00 IRST",
+    actor: "Israel",
+    location: "Tehran – IRIB Broadcaster",
+    country: "Iran",
+    lat: 35.7600, lng: 51.3900,
+    type: "Media / Infrastructure",
+    vehicle: "F-35I Adir · Standoff munitions",
+    killed: 0,
+    wounded: 0,
+    note: "Islamic Republic of Iran Broadcasting (IRIB) complex hit. No casualties reported by Iranian authorities."
+  }
+];
+
+// ── Sort by date/time — most recent first ─────────────────────────────────
+strikes.sort((a,b) => {
+  const da = new Date(a.date + 'T' + a.time);
+  const db = new Date(b.date + 'T' + b.time);
+  return db - da;
+});
+
+// ── Build Table ───────────────────────────────────────────────────────────
+const tbody = document.getElementById('tableBody');
+strikes.forEach((s, i) => {
+  const tagClass  = s.actor === 'Israel' ? 'tag-israel' : 'tag-iran';
+  const tagLabel  = s.actor === 'Israel' ? 'ISRAEL / US' : 'IRAN';
+
+  let kClass = 'zero';
+  if (s.killed >= 100)     kClass = 'high';
+  else if (s.killed >= 10) kClass = 'med';
+  else if (s.killed >= 1)  kClass = 'low';
+
+  let wClass = 'zero';
+  if (s.wounded >= 100)     wClass = 'high';
+  else if (s.wounded >= 20) wClass = 'med';
+  else if (s.wounded >= 1)  wClass = 'low';
+
+  // Convert local display date to UTC label
+  const utcLabel = s.displayDate.replace('IDT','UTC+3').replace('IRST','UTC+3:30');
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="color:#445566">${i+1}</td>
+    <td class="date-col">${utcLabel}</td>
+    <td><span class="tag ${tagClass}">${tagLabel}</span></td>
+    <td class="location-col">${s.location}</td>
+    <td style="color:#c0c0d0">${s.country}</td>
+    <td class="desc-col">${s.type}</td>
+    <td class="desc-col" style="color:#b0c8e0">${s.vehicle || '—'}</td>
+    <td class="casualties-num ${kClass}">${s.killed > 0 ? s.killed : '—'}</td>
+    <td class="casualties-num ${wClass}">${s.wounded > 0 ? s.wounded : '—'}</td>
+    <td class="desc-col">${s.note}</td>
+  `;
+  tr.addEventListener('click', () => {
+    // Pan map to this marker
+    map.flyTo([s.lat, s.lng], 7, { duration: 1 });
+  });
+  tbody.appendChild(tr);
+});
+
+// ── Init Map ───────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [32.0, 47.0],
+  zoom: 4,
+  zoomControl: true
+});
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+// ── Create Markers ────────────────────────────────────────────────────────
+function makeIcon(actor, killed) {
+  const isIsrael = actor === 'Israel';
+  const color    = isIsrael ? '#e63946' : '#2dc653';
+  const glow     = isIsrael ? 'rgba(230,57,70,0.6)' : 'rgba(45,198,83,0.5)';
+  let size = 20;
+  if (killed >= 100) size = 38;
+  else if (killed >= 30) size = 30;
+  else if (killed >= 5)  size = 24;
+
+  const label = killed > 0 ? killed : '';
+
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:${size}px;height:${size}px;
+      border-radius:50%;
+      background: radial-gradient(circle at 35% 35%, ${isIsrael ? '#ff6b75,#a01020' : '#4de876,#147a32'});
+      border: 2px solid rgba(255,255,255,0.45);
+      box-shadow: 0 0 ${size/2}px ${glow};
+      display:flex;align-items:center;justify-content:center;
+      font-size:${size > 24 ? 10 : 8}px;font-weight:bold;color:white;
+      text-shadow:0 1px 3px rgba(0,0,0,0.9);
+    ">${label}</div>`,
+    iconSize:   [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor:[0, -size/2]
+  });
+}
+
+const markerMap = {};
+strikes.forEach(s => {
+  const icon   = makeIcon(s.actor, s.killed);
+  const marker = L.marker([s.lat, s.lng], { icon }).addTo(map);
+  const tagHtml = s.actor === 'Israel'
+    ? `<span style="background:rgba(230,57,70,0.25);color:#ff7a80;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;border:1px solid rgba(230,57,70,0.4)">ISRAEL / US</span>`
+    : `<span style="background:rgba(45,198,83,0.2);color:#3dde6e;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;border:1px solid rgba(45,198,83,0.35)">IRAN</span>`;
+
+  marker.bindPopup(`
+    <div style="min-width:240px;font-family:'Segoe UI',sans-serif">
+      <div style="font-size:13px;font-weight:bold;color:#fff;margin-bottom:6px">${s.location}</div>
+      <div style="margin-bottom:6px">${tagHtml}</div>
+      <table style="font-size:11.5px;color:#ccc;border-collapse:collapse;width:100%">
+        <tr><td style="color:#aaa;padding:2px 4px">Date / Time</td><td style="padding:2px 4px;color:#e0e0e0">${s.displayDate.replace('IDT','UTC+3').replace('IRST','UTC+3:30')}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Country</td><td style="padding:2px 4px;color:#e0e0e0">${s.country}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Target Type</td><td style="padding:2px 4px;color:#e0e0e0">${s.type}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Vehicle / Weapon</td><td style="padding:2px 4px;color:#b0c8e0">${s.vehicle || '—'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Killed</td><td style="padding:2px 4px;color:${s.killed>0?'#ff7777':'#666'};font-weight:bold">${s.killed > 0 ? s.killed : '—'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Wounded</td><td style="padding:2px 4px;color:${s.wounded>0?'#ffaa44':'#666'};font-weight:bold">${s.wounded > 0 ? s.wounded : '—'}</td></tr>
+      </table>
+      <div style="font-size:11px;color:#9999bb;margin-top:8px;line-height:1.5">${s.note}</div>
+    </div>
+  `, { maxWidth: 320 });
+
+  markerMap[s.id] = marker;
+});
+</script>
+
+<!-- ── Live Update Polling ──────────────────────────────────────────────── -->
+<script>
+const POLL_INTERVAL = 600000; // 10 minutes
+let liveMarkers = {};
+let countdownSec = POLL_INTERVAL / 1000;
+let countdownTimer;
+
+function formatCountdown(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `Next refresh in ${m}m ${String(s).padStart(2,'0')}s`;
+}
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdownSec = POLL_INTERVAL / 1000;
+  countdownTimer = setInterval(() => {
+    countdownSec = Math.max(0, countdownSec - 1);
+    document.getElementById('next-refresh').textContent = formatCountdown(countdownSec);
+  }, 1000);
+}
+
+function addLiveEventToTable(ev, prepend = true) {
+  const tbody = document.getElementById('tableBody');
+  const tagClass  = ev.actor === 'Israel' ? 'tag-israel' : 'tag-iran';
+  const tagLabel  = ev.actor === 'Israel' ? 'ISRAEL / US' : 'IRAN';
+
+  let kClass = 'zero';
+  if (ev.killed >= 100)     kClass = 'high';
+  else if (ev.killed >= 10) kClass = 'med';
+  else if (ev.killed >= 1)  kClass = 'low';
+
+  let wClass = 'zero';
+  if (ev.wounded >= 100)     wClass = 'high';
+  else if (ev.wounded >= 20) wClass = 'med';
+  else if (ev.wounded >= 1)  wClass = 'low';
+
+  const sourceLink = ev.source
+    ? `<a href="${ev.source}" target="_blank" style="color:#4477aa;font-size:0.72rem;display:block;margin-top:3px">Source ↗</a>`
+    : '';
+
+  const tr = document.createElement('tr');
+  tr.id = 'ev-' + ev.id;
+  tr.className = 'new-row-flash';
+  tr.innerHTML = `
+    <td style="color:#3dde6e;font-size:0.7rem">LIVE</td>
+    <td class="date-col">${ev.displayDate} UTC</td>
+    <td><span class="tag ${tagClass}">${tagLabel}</span></td>
+    <td class="location-col">${ev.location} <span class="live-tag">NEW</span></td>
+    <td style="color:#c0c0d0">${ev.country}</td>
+    <td class="desc-col">${ev.type}</td>
+    <td class="desc-col" style="color:#b0c8e0">—</td>
+    <td class="casualties-num ${kClass}">${ev.killed > 0 ? ev.killed : '—'}</td>
+    <td class="casualties-num ${wClass}">${ev.wounded > 0 ? ev.wounded : '—'}</td>
+    <td class="desc-col">${ev.headline || ev.note}${sourceLink}</td>
+  `;
+  tr.addEventListener('click', () => map.flyTo([ev.lat, ev.lng], 6, { duration: 1 }));
+  if (prepend) {
+    tbody.insertBefore(tr, tbody.firstChild);
+  } else {
+    tbody.appendChild(tr);
+  }
+}
+
+function addLiveMarker(ev) {
+  if (liveMarkers[ev.id]) return; // already added
+  const icon = makeIcon(ev.actor, ev.killed);
+  const marker = L.marker([ev.lat, ev.lng], { icon }).addTo(map);
+  const tagHtml = ev.actor === 'Israel'
+    ? `<span style="background:rgba(230,57,70,0.25);color:#ff7a80;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;border:1px solid rgba(230,57,70,0.4)">ISRAEL / US</span>`
+    : `<span style="background:rgba(45,198,83,0.2);color:#3dde6e;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;border:1px solid rgba(45,198,83,0.35)">IRAN</span>`;
+
+  marker.bindPopup(`
+    <div style="min-width:240px;font-family:'Segoe UI',sans-serif">
+      <div style="font-size:10px;color:#3dde6e;font-weight:bold;margin-bottom:3px">LIVE UPDATE</div>
+      <div style="font-size:13px;font-weight:bold;color:#fff;margin-bottom:6px">${ev.headline || ev.location}</div>
+      <div style="margin-bottom:6px">${tagHtml}</div>
+      <table style="font-size:11.5px;color:#ccc;border-collapse:collapse;width:100%">
+        <tr><td style="color:#aaa;padding:2px 4px">Date / Time</td><td style="padding:2px 4px;color:#e0e0e0">${ev.displayDate}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Location</td><td style="padding:2px 4px;color:#e0e0e0">${ev.location}, ${ev.country}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Killed</td><td style="padding:2px 4px;color:${ev.killed>0?'#ff7777':'#666'};font-weight:bold">${ev.killed > 0 ? ev.killed : '—'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 4px">Wounded</td><td style="padding:2px 4px;color:${ev.wounded>0?'#ffaa44':'#666'};font-weight:bold">${ev.wounded > 0 ? ev.wounded : '—'}</td></tr>
+      </table>
+      <div style="font-size:11px;color:#9999bb;margin-top:8px;line-height:1.5">${ev.note}</div>
+      ${ev.source ? `<a href="${ev.source}" target="_blank" style="font-size:10px;color:#4488cc;display:block;margin-top:6px">Read full article ↗</a>` : ''}
+    </div>
+  `, { maxWidth: 340 });
+
+  liveMarkers[ev.id] = marker;
+}
+
+const seenIds = new Set();
+
+async function fetchUpdates() {
+  try {
+    const resp = await fetch('/api/updates');
+    if (!resp.ok) return;
+    const data = await resp.json();
+
+    let newCount = 0;
+    (data.live_updates || []).forEach(ev => {
+      if (!seenIds.has(ev.id)) {
+        seenIds.add(ev.id);
+        addLiveEventToTable(ev, true);
+        addLiveMarker(ev);
+        newCount++;
+      }
+    });
+
+    // Update status bar
+    const total = data.update_count || 0;
+    document.getElementById('live-meta').textContent =
+      `Last feed check: ${data.last_refresh || '—'} · Sources: Al Jazeera, BBC, Reuters, NYT, Fox, JPost`;
+    document.getElementById('live-count').textContent =
+      total > 0 ? `${total} live article${total !== 1 ? 's' : ''} found` : 'Monitoring feeds…';
+    document.getElementById('last-updated-hdr').innerHTML =
+      `Last updated:<br/>${data.server_time || '—'}`;
+
+    if (newCount > 0) {
+      document.getElementById('live-status').textContent = `LIVE +${newCount} NEW`;
+      setTimeout(() => {
+        document.getElementById('live-status').textContent = 'LIVE';
+      }, 8000);
+    }
+
+  } catch (e) {
+    document.getElementById('live-meta').textContent = 'Feed check failed — retrying in 10 min';
+  }
+
+  startCountdown();
+}
+
+// Initial fetch + recurring every 10 min
+fetchUpdates();
+setInterval(fetchUpdates, POLL_INTERVAL);
+startCountdown();
+</script>
+
+<!-- ── DXB Flight Table JS ──────────────────────────────────────────────── -->
+<script>
+let allFlightRows = [];   // { ...flight, rowEl }
+let activeFilter  = 'ALL';
+
+function dirHtml(dir) {
+  if (dir === 'DEP')     return '<span class="dir-dep">DEP ↑</span>';
+  if (dir === 'ARR')     return '<span class="dir-arr">ARR ↓</span>';
+  if (dir === 'DEP+ARR') return '<span class="dir-both">DEP+ARR</span>';
+  return dir;
+}
+
+function statusPill(status, color) {
+  const bg = color + '22';
+  const border = color + '55';
+  return `<span class="status-pill" style="background:${bg};color:${color};border:1px solid ${border}">${status}</span>`;
+}
+
+function airportStatus(dep, arr, cancelled) {
+  const total = dep + arr;
+  if (total === 0) return ['Suspended', '#e63946'];
+  if (cancelled / total > 0.5) return ['Severely Disrupted', '#ff6b35'];
+  if (cancelled / total > 0.2) return ['Partial Operations', '#ff9900'];
+  return ['Operating', '#2dc653'];
+}
+
+function renderFlightRow(f, isHistorical) {
+  const tr = document.createElement('tr');
+  tr.style.borderBottom = '1px solid #1e2a40';
+
+  const histBadge = isHistorical
+    ? '<span class="hist-badge">NEWS</span>'
+    : '<span class="live-tag">LIVE</span>';
+
+  const noteCell = f.note
+    ? `<td class="desc-col">${f.note}</td>`
+    : `<td></td>`;
+
+  tr.innerHTML = `
+    <td class="date-col">${f.date}</td>
+    <td class="date-col">${f.time}</td>
+    <td>${dirHtml(f.direction)}</td>
+    <td style="color:#e0d080;font-family:monospace;font-size:0.82rem">${f.flight}${histBadge}</td>
+    <td class="location-col">${f.airline}</td>
+    <td style="color:#c0c0d0">${f.destination}</td>
+    <td style="color:#7a9cc0;font-size:0.78rem">${f.iata}</td>
+    <td>${statusPill(f.status, f.status_color || '#c0c0c0')}</td>
+    ${noteCell}
+  `;
+
+  // filter hook
+  tr._dir    = f.direction;
+  tr._status = f.status.toLowerCase();
+  return tr;
+}
+
+function applyFilter(filter) {
+  activeFilter = filter;
+  // update button styles
+  ['all','dep','arr','cancel'].forEach(k => {
+    const btn = document.getElementById('fbtn-' + k);
+    btn.classList.toggle('f-btn-active', k.toUpperCase() === filter || (k === 'all' && filter === 'ALL'));
+  });
+  allFlightRows.forEach(({ tr }) => {
+    let show = true;
+    if (filter === 'DEP')    show = tr._dir === 'DEP' || tr._dir === 'DEP+ARR';
+    if (filter === 'ARR')    show = tr._dir === 'ARR' || tr._dir === 'DEP+ARR';
+    if (filter === 'CANCEL') show = tr._status.includes('cancel') || tr._status.includes('suspend');
+    tr.style.display = show ? '' : 'none';
+  });
+}
+
+function filterFlights(f) { applyFilter(f); }
+
+async function fetchFlights() {
+  try {
+    const resp = await fetch('/api/flights');
+    if (!resp.ok) return;
+    const data = await resp.json();
+
+    const tbody = document.getElementById('flightBody');
+    tbody.innerHTML = '';
+    allFlightRows = [];
+
+    // Update stats
+    const dep = data.dep_count || 0;
+    const arr = data.arr_count || 0;
+    const can = data.cancelled_count || 0;
+    document.getElementById('fstat-dep').textContent       = dep || '—';
+    document.getElementById('fstat-arr').textContent       = arr || '—';
+    document.getElementById('fstat-cancelled').textContent = can || '—';
+    document.getElementById('flight-last-refresh').textContent = `Updated: ${data.last_refresh || '—'}`;
+
+    const [statusLabel, statusColor] = airportStatus(dep, arr, can);
+    const statusEl = document.getElementById('fstat-status');
+    statusEl.textContent = statusLabel;
+    statusEl.style.color = statusColor;
+
+    // ── LIVE flights first (most recent at top = sorted by time desc)
+    const liveFlights = (data.live_flights || []).slice().reverse();
+    liveFlights.forEach(f => {
+      const tr = renderFlightRow(f, false);
+      tr.classList.add('new-row-flash');
+      tbody.appendChild(tr);
+      allFlightRows.push({ tr });
+    });
+
+    // ── Historical data (sorted newest day first)
+    const hist = (data.historical || []).slice().reverse();
+    hist.forEach(f => {
+      const tr = renderFlightRow(f, true);
+      tbody.appendChild(tr);
+      allFlightRows.push({ tr });
+    });
+
+    applyFilter(activeFilter);
+    document.getElementById('flight-live-status').textContent = 'LIVE';
+
+  } catch(e) {
+    document.getElementById('flight-last-refresh').textContent = 'Fetch failed — retrying';
+  }
+}
+
+// Initial load + recurring every 10 min
+fetchFlights();
+setInterval(fetchFlights, POLL_INTERVAL);
+</script>
+</body>
+</html>
